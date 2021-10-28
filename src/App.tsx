@@ -1,4 +1,4 @@
-import React, { Fragment } from "react";
+import React, { Fragment, useEffect } from "react";
 import logo from "./logo.svg";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { CssBaseline } from "@mui/material";
@@ -8,9 +8,10 @@ import { Route, Switch, Redirect } from "react-router-dom";
 import Register from "./components/Register";
 import { makeStyles } from "@mui/styles";
 import Alert from "./components/UI/Alert";
-import { useSelector } from "react-redux";
-import { RootState } from "./store";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "./store";
 import Home from "./components/Home";
+import { authActions } from "./store/auth-slice";
 
 const theme = createTheme({
   palette: {
@@ -29,13 +30,21 @@ const useStyles = makeStyles({
   center: {
     textAlign: "center",
   },
-  form:{
-    display:"inline-flex",flexDirection:"column",width:"300px"
-  }
+  form: {
+    display: "inline-flex",
+    flexDirection: "column",
+    width: "300px",
+  },
 });
 
 function App() {
-  const alertVisible = useSelector((state:RootState) => state.ui.alertVisible);
+  const dispatch: AppDispatch = useDispatch();
+  const isAuthenticated = useSelector(
+    (state: RootState) => state.auth.isAuthenticated
+  );
+  useEffect(() => {
+    dispatch(authActions.isLogged());
+  }, [isAuthenticated]);
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline></CssBaseline>
@@ -44,20 +53,31 @@ function App() {
         <Route path="/" exact>
           <Redirect to="/login" />
         </Route>
-        <Route path="/login" exact>
-          <div className={classes.Login}>
-            <Login />
-          </div>
+        <Route path="/login">
+          {isAuthenticated&& <Redirect to="/home" />}
+          {!isAuthenticated&& 
+            <div className={classes.Login}>
+              <Login />
+            </div>
+          }   
         </Route>
-        <Route path="/register" exact>
-          <div className={classes.Login}>
-            <Register />
-          </div>
+        <Route path="/register">
+        {isAuthenticated&& <Redirect to="/home" />}
+          {!isAuthenticated&& 
+            <div className={classes.Login}>
+              <Register />
+            </div>
+          }  
         </Route>
-        <Route path="/home" exact>
-          <div className={classes.Login}>
-            <Home></Home>
-          </div>
+        <Route path="/home">
+        {!isAuthenticated&& <Redirect to="/login" />}
+          {isAuthenticated&& 
+              <Home></Home>
+          } 
+            
+        </Route>
+        <Route path="*">
+          <Redirect to="/"></Redirect>
         </Route>
       </Switch>
       <Fragment></Fragment>

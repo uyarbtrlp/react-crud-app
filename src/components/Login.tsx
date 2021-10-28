@@ -16,8 +16,8 @@ import React, { FC, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { NavLink } from "react-router-dom";
 import { AppDispatch, RootState } from "../store";
-import { sendLoginData, sendRegisterData } from "../store/auth-actions";
-import { authActions, LoginUser, RegisterUser } from "../store/auth-slice";
+import { LoginUser, sendLoginDataAction } from "../store/auth-actions";
+import { authActions } from "../store/auth-slice";
 import { useHistory } from "react-router";
 
 const useStyles = makeStyles({
@@ -46,9 +46,10 @@ const Login: FC<{}> = () => {
       username: usernameText,
       password: passwordText,
     };
-    dispatch(sendLoginData(user, history));
+    dispatch(sendLoginDataAction(user, history));
     setUsernameText("");
     setPasswordText("");
+    history.push("/login")
   };
 
   const handleUsernameChange = (event: React.ChangeEvent<HTMLInputElement>) => {

@@ -1,14 +1,21 @@
 
 import { RouteComponentProps } from "react-router";
 import { AppDispatch, RootState } from ".";
-import authSlice, { authActions, calculateRemaningTime, LoginUser, RegisterUser } from "./auth-slice";
+import authSlice, { authActions } from "./auth-slice";
 import uiSlice, { uiActions } from "./ui-slice";
 import { History } from 'history';
 import { useSelector } from "react-redux";
 
-export const sendLoginData = (user: LoginUser,history:History) => {
+export interface LoginUser {
+  username: string;
+  password: string;
+}
+export interface RegisterUser {
+  username: string;
+  password: string;
+}
+export const sendLoginDataAction = (user: LoginUser,history:History) => {
   return async (dispatch:AppDispatch) => {
-    dispatch(authActions.sendLoginData(user))
     fetch("https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyCbJeYviAwic7VRYcjLGl7CPJGx2iqxEIE", {
       method: "POST",
       body: JSON.stringify({
@@ -23,12 +30,9 @@ export const sendLoginData = (user: LoginUser,history:History) => {
         .then((res) => {
           if (res.ok) {
             res.json().then(data=>{
-              const expirationTime = new Date((new Date().getTime() + (+data.expiresIn*1000)))
-              const idToken = data.idToken
-              const expirationTimeString = expirationTime.toISOString()
-              dispatch(authActions.login({idToken,expirationTimeString}))
-              const logoutTimer = setTimeout(()=>dispatch(authActions.logout()),calculateRemaningTime(expirationTimeString))
-              dispatch(authActions.setLogoutTimer({logoutTimer:logoutTimer}))
+              saveTokenInLocaleStorage(data)
+              runLogoutTimer(dispatch,data.expiresIn*1000)
+              dispatch(authActions.login(data.idToken))
               dispatch(uiActions.showNotification({
                 type:"Success",
                 message:"Login is successful."
@@ -47,9 +51,8 @@ export const sendLoginData = (user: LoginUser,history:History) => {
         })
   };
 }
-export const sendRegisterData = (user: RegisterUser,history:History) => {
+export const sendRegisterDataAction = (user: RegisterUser,history:History) => {
   return async (dispatch:AppDispatch) => {
-    dispatch(authActions.sendRegisterData(user))
     fetch("https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyCbJeYviAwic7VRYcjLGl7CPJGx2iqxEIE", {
         method: "POST",
         body: JSON.stringify({
@@ -82,3 +85,30 @@ export const sendRegisterData = (user: RegisterUser,history:History) => {
         })
   };
 };
+export function saveTokenInLocaleStorage(userDetails:any){
+  userDetails.expireDate = new Date(new Date().getTime()+userDetails.expiresIn * 1000)
+  localStorage.setItem("userDetails",JSON.stringify(userDetails))
+}
+export function runLogoutTimer(dispatch:AppDispatch,timer:number){
+  setTimeout(()=>{
+    dispatch(authActions.logout())
+  },timer)
+}
+
+export function checkAutoLogin(dispatch:AppDispatch){
+  const tokenDetailsString = localStorage.getItem("userDetails")
+  let tokenDetails:any='';
+  if(!tokenDetailsString){
+    dispatch(authActions.logout())
+    return;
+  }
+    tokenDetails = JSON.parse(tokenDetailsString)
+    let expireDate = new Date(tokenDetails.expireDate)
+    let todaysDate = new Date()
+    if(todaysDate > expireDate) {
+      dispatch(authActions.logout())
+      return
+    }
+    const timer = expireDate.getTime() - todaysDate.getTime()
+    runLogoutTimer(dispatch,timer)
+}
