@@ -10,7 +10,7 @@ const Alert: React.FC<{}> = (props) => {
   const dispatch = useDispatch();
   const isOpen = useSelector((state: RootState) => state.ui.alertVisible);
   const [state, setState] = useState<State>({
-    vertical: "top",
+    vertical: "bottom",
     horizontal: "right",
   });
   const message = useSelector((state: RootState) => state.ui.message);
