@@ -19,6 +19,8 @@ import { AppDispatch, RootState } from "../store";
 import { LoginUser, sendLoginDataAction } from "../store/auth-actions";
 import { authActions } from "../store/auth-slice";
 import { useHistory } from "react-router";
+import * as yup from "yup";
+import { Formik, useFormik } from "formik";
 
 const useStyles = makeStyles({
   center: {
@@ -30,59 +32,38 @@ const useStyles = makeStyles({
     width: "300px",
   },
 });
+const validationSchema = yup.object({
+  email: yup
+    .string()
+    .email("Enter a valid email")
+    .required("Email is required"),
+  password: yup
+    .string()
+    .min(6, "Password should be of minimum 6 characters length")
+    .required("Password is required"),
+});
 const Login: FC<{}> = () => {
-  const [usernameText, setUsernameText] = useState<string>("");
-  const [usernameIsEmpty, setUsernameIsEmpty] = useState<boolean>(false);
-  // const [usernameIsValid,setUsernameIsValid] = useState<boolean>(false)
-  const [passwordText, setPasswordText] = useState<string>("");
-  const [passwordIsEmpty, setPasswordIsEmpty] = useState<boolean>(false);
-  const [showPassword, setShowPassword] = useState<boolean>(false);
   const dispatch: AppDispatch = useDispatch();
   const history = useHistory();
+  const [showPassword, setShowPassword] = useState<boolean>(false);
 
-  const onSubmitHandler = (event: React.FormEvent) => {
-    event.preventDefault();
-    const user: LoginUser = {
-      username: usernameText,
-      password: passwordText,
-    };
-    dispatch(sendLoginDataAction(user, history));
-    setUsernameText("");
-    setPasswordText("");
-    history.push("/login")
-  };
 
-  const handleUsernameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setUsernameText(event.target.value);
-    if (event.target.value === "") {
-      setUsernameIsEmpty(true);
-    } else {
-      setUsernameIsEmpty(false);
-    }
-  };
-  const handlePasswordChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setPasswordText(event.target.value);
-    if (event.target.value === "") {
-      setPasswordIsEmpty(true);
-    } else {
-      setPasswordIsEmpty(false);
-    }
-  };
-  const handleUsernameFocusEvent = (
-    event: React.FocusEvent<HTMLInputElement>
-  ) => {
-    if (event.target.value === "") {
-      setUsernameIsEmpty(true);
-    }
-  };
-  const handlePasswordFocusEvent = (
-    event: React.FocusEvent<HTMLInputElement>
-  ) => {
-    if (event.target.value === "") {
-      setPasswordIsEmpty(true);
-    }
-  };
-
+  const classes = useStyles();
+  const formik = useFormik({
+    initialValues: {
+      email: "",
+      password: "",
+    },
+    validationSchema: validationSchema,
+    onSubmit: (values) => {
+      const user: LoginUser = {
+        username: values.email,
+        password: values.password,
+      };
+      dispatch(sendLoginDataAction(user, history));
+      history.push("/login");
+    },
+  });
   const handleClickShowPassword = () => {
     setShowPassword((x) => !x);
   };
@@ -91,20 +72,18 @@ const Login: FC<{}> = () => {
   ) => {
     event.preventDefault();
   };
-
-  const classes = useStyles();
   return (
     <Card className={classes.center} sx={{ minWidth: 375 }}>
       <CardContent>
-        <form className={classes.form} onSubmit={onSubmitHandler}>
+      <form className={classes.form} onSubmit={formik.handleSubmit}>
           <TextField
-            id="username"
-            label="Username or Email"
-            onChange={handleUsernameChange}
-            value={usernameText}
-            error={usernameIsEmpty}
-            helperText={usernameIsEmpty ? "This field must not be empty!" : ""}
-            onBlur={handleUsernameFocusEvent}
+            id="email"
+            label="Email"
+            name="email"
+            value={formik.values.email}
+            onChange={formik.handleChange}
+            error={formik.touched.email && Boolean(formik.errors.email)}
+            helperText={formik.touched.email && formik.errors.email}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="start">
@@ -121,12 +100,12 @@ const Login: FC<{}> = () => {
             }}
             id="password"
             type={showPassword ? "text" : "password"}
-            onChange={handlePasswordChange}
-            value={passwordText}
-            error={passwordIsEmpty}
-            onBlur={handlePasswordFocusEvent}
-            helperText={passwordIsEmpty ? "This field must not be empty!" : ""}
+            name="password"
             label="Password"
+            value={formik.values.password}
+            onChange={formik.handleChange}
+            error={formik.touched.password && Boolean(formik.errors.password)}
+            helperText={formik.touched.password && formik.errors.password}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
@@ -135,7 +114,7 @@ const Login: FC<{}> = () => {
                     onClick={handleClickShowPassword}
                     onMouseDown={handleMouseDownPassword}
                   >
-                    {/* {values.showPassword ? <VisibilityOff /> : <Visibility />} */}
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
                   </IconButton>
                 </InputAdornment>
               ),
