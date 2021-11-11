@@ -55,13 +55,14 @@ const Login: FC<{}> = () => {
       password: "",
     },
     validationSchema: validationSchema,
+    validateOnBlur:true,
+    validateOnChange:true,
     onSubmit: (values) => {
       const user: LoginUser = {
         username: values.email,
         password: values.password,
       };
       dispatch(sendLoginDataAction(user, history));
-      history.push("/login");
     },
   });
   const handleClickShowPassword = () => {
@@ -82,6 +83,7 @@ const Login: FC<{}> = () => {
             name="email"
             value={formik.values.email}
             onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
             error={formik.touched.email && Boolean(formik.errors.email)}
             helperText={formik.touched.email && formik.errors.email}
             InputProps={{
@@ -104,6 +106,7 @@ const Login: FC<{}> = () => {
             label="Password"
             value={formik.values.password}
             onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
             error={formik.touched.password && Boolean(formik.errors.password)}
             helperText={formik.touched.password && formik.errors.password}
             InputProps={{
@@ -121,7 +124,7 @@ const Login: FC<{}> = () => {
             }}
             variant="standard"
           />
-          <Button variant="contained" type="submit">
+          <Button disabled={!(formik.isValid && formik.dirty)} variant="contained" type="submit">
             Login
           </Button>
         </form>

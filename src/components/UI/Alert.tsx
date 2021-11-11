@@ -29,7 +29,7 @@ const Alert: React.FC<{}> = (props) => {
   let successAlert = (
     <Snackbar
       anchorOrigin={{ vertical, horizontal }}
-      autoHideDuration={6000}
+      autoHideDuration={3000}
       open={isOpen}
       onClose={handleClose}
       key={vertical + horizontal}
@@ -43,7 +43,7 @@ const Alert: React.FC<{}> = (props) => {
     <Snackbar
       anchorOrigin={{ vertical, horizontal }}
       open={isOpen}
-      autoHideDuration={6000}
+      autoHideDuration={3000}
       onClose={handleClose}
       key={vertical + horizontal}
     >

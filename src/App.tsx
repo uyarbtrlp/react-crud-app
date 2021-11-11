@@ -12,6 +12,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "./store";
 import Home from "./components/Home";
 import { authActions } from "./store/auth-slice";
+import Layout from "./components/UI/Layout";
 
 const theme = createTheme({
   palette: {
@@ -72,7 +73,10 @@ function App() {
         <Route path="/home">
         {!isAuthenticated&& <Redirect to="/login" />}
           {isAuthenticated&& 
+          <Layout>
               <Home></Home>
+          </Layout>
+              
           } 
             
         </Route>

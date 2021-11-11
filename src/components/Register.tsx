@@ -18,6 +18,8 @@ import { NavLink } from "react-router-dom";
 import { AppDispatch, RootState } from "../store";
 import { RegisterUser, sendRegisterDataAction } from "../store/auth-actions";
 import { useHistory } from "react-router";
+import * as yup from "yup";
+import { Formik, useFormik } from "formik";
 
 const useStyles = makeStyles({
   center: {
@@ -30,56 +32,41 @@ const useStyles = makeStyles({
   },
 });
 
+const validationSchema = yup.object({
+  email: yup
+    .string()
+    .email("Enter a valid email.")
+    .required("Email is required."),
+  password: yup
+    .string()
+    .min(6, "Password should be of minimum 6 characters length.")
+    .required("Password is required."),
+  confirmPassword: yup.string()
+    .oneOf([yup.ref('password'),null],'Password must match.')
+    .required("Confirm password is required.")
+});
+
 const Register: FC<{}> = () => {
-  const [usernameText, setUsernameText] = useState<string>("");
-  const [usernameIsEmpty, setUsernameIsEmpty] = useState<boolean>(false);
-  const [passwordText, setPasswordText] = useState<string>("");
-  const [passwordIsEmpty, setPasswordIsEmpty] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
   const dispatch: AppDispatch = useDispatch();
   const history = useHistory()
 
-  const onSubmitHandler = (event: React.FormEvent) => {
-    event.preventDefault();
-    const user: RegisterUser = {
-      username: usernameText,
-      password: passwordText,
-    };
-    dispatch(sendRegisterDataAction(user,history));
-    setUsernameText("");
-    setPasswordText("");
-  };
-
-  const handleUsernameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setUsernameText(event.target.value);
-    if (event.target.value === "") {
-      setUsernameIsEmpty(true);
-    } else {
-      setUsernameIsEmpty(false);
-    }
-  };
-  const handlePasswordChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setPasswordText(event.target.value);
-    if (event.target.value === "") {
-      setPasswordIsEmpty(true);
-    } else {
-      setPasswordIsEmpty(false);
-    }
-  };
-  const handleUsernameFocusEvent = (
-    event: React.FocusEvent<HTMLInputElement>
-  ) => {
-    if (event.target.value === "") {
-      setUsernameIsEmpty(true);
-    }
-  };
-  const handlePasswordFocusEvent = (
-    event: React.FocusEvent<HTMLInputElement>
-  ) => {
-    if (event.target.value === "") {
-      setPasswordIsEmpty(true);
-    }
-  };
+  const formik = useFormik({
+    initialValues: {
+      email: "",
+      password: "",
+      confirmPassword:""
+    },
+    validationSchema: validationSchema,
+    onSubmit: (values) => {
+      const user: RegisterUser = {
+        username: values.email,
+        password: values.password,
+      };
+      dispatch(sendRegisterDataAction(user, history));
+    },
+  });
 
   const handleClickShowPassword = () => {
     setShowPassword((x) => !x);
@@ -89,21 +76,29 @@ const Register: FC<{}> = () => {
   ) => {
     event.preventDefault();
   };
+  const handleClickConfirmPassword = () => {
+    setShowConfirmPassword((x) => !x);
+  };
+  const handleMouseDownConfirmPassword = (
+    event: React.MouseEvent<HTMLButtonElement>
+  ) => {
+    event.preventDefault();
+  };
 
   const classes = useStyles();
   return (
     <Card className={classes.center} sx={{ minWidth: 375 }}>
       <CardContent>
-        <form className={classes.form} onSubmit={onSubmitHandler}>
+        <form className={classes.form} onSubmit={formik.handleSubmit}>
           <TextField
-            id="username"
-            label="Username or Email"
+            id="email"
+            label="Email"
             autoComplete="false"
-            onChange={handleUsernameChange}
-            value={usernameText}
-            error={usernameIsEmpty}
-            helperText={usernameIsEmpty ? "This field must not be empty!" : ""}
-            onBlur={handleUsernameFocusEvent}
+            value={formik.values.email}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            error={formik.touched.email && Boolean(formik.errors.email)}
+            helperText={formik.touched.email && formik.errors.email}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="start">
@@ -116,16 +111,14 @@ const Register: FC<{}> = () => {
 
           <TextField
             id="password"
-            sx={{
-              marginBottom: "20px",
-            }}
             type={showPassword ? "text" : "password"}
-            onChange={handlePasswordChange}
-            value={passwordText}
-            error={passwordIsEmpty}
-            onBlur={handlePasswordFocusEvent}
-            helperText={passwordIsEmpty ? "This field must not be empty!" : ""}
+            name="password"
             label="Password"
+            value={formik.values.password}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            error={formik.touched.password && Boolean(formik.errors.password)}
+            helperText={formik.touched.password && formik.errors.password}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
@@ -141,35 +134,34 @@ const Register: FC<{}> = () => {
             }}
             variant="standard"
           />
-          {/* <TextField
+          <TextField
             sx={{
               marginBottom: "20px",
             }}
-            id="passwordAgain"
-            type={values.showPasswordCheck ? "text" : "password"}
-            value={values.passwordCheck}
-            onChange={handlePasswordAgainChange}
-            value={passwordAgainText}
-            label="Password Check"
-            error={passwordAgainIsEmpty}
-            helperText={passwordAgainIsEmpty ? 'This field must not be empty!':''}
-            onBlur={handlePasswordAgainFocusEvent}
+            id="confirmPassword"
+            type={showConfirmPassword ? "text" : "password"}
+            value={formik.values.confirmPassword}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            label="Confirm Password"
+            error={formik.touched.confirmPassword && Boolean(formik.errors.confirmPassword)}
+            helperText={formik.touched.confirmPassword && formik.errors.confirmPassword}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
                   <IconButton
                     aria-label="toggle password visibility"
-                    onClick={handleClickShowPassword}
-                    onMouseDown={handleMouseDownPassword}
+                    onClick={handleClickConfirmPassword}
+                    onMouseDown={handleMouseDownConfirmPassword}
                   >
-                    {values.showPasswordCheck ? <VisibilityOff /> : <Visibility />}
+                    {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
                   </IconButton>
                 </InputAdornment>
               ),
             }}
             variant="standard"
-          /> */}
-          <Button variant="contained" type="submit">
+          />
+          <Button disabled={!(formik.isValid && formik.dirty)} variant="contained" type="submit">
             Register
           </Button>
         </form>
