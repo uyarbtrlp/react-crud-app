@@ -5,6 +5,7 @@ import { checkAutoLogin } from "../store/auth-actions";
 import { authActions } from "../store/auth-slice";
 import AddIcon from '@mui/icons-material/Add';
 import * as React from "react";
+import * as yup from "yup";
 import {
   Button,
   Dialog,
@@ -15,6 +16,17 @@ import {
   Icon,
   TextField,
 } from "@mui/material";
+import { useFormik } from "formik";
+import { Note, sendNoteAction } from "../store/note-actions";
+
+const validationSchema = yup.object({
+  title: yup
+    .string()
+    .required("Title is required"),
+  message: yup
+    .string()
+    .required("Message of note is required"),
+});
 
 const Home: React.FC<{}> = () => {
   const dispatch: AppDispatch = useDispatch();
@@ -35,6 +47,23 @@ const Home: React.FC<{}> = () => {
     event.preventDefault();
     setOpen(false);
   };
+  const formik = useFormik({
+    initialValues: {
+      title: "",
+      message: "",
+    },
+    validationSchema: validationSchema,
+    validateOnBlur:true,
+    validateOnChange:true,
+    onSubmit: (values,{resetForm}) => {
+      const note:Note = {
+        message:values.message,
+        title:values.title
+      }
+      dispatch(sendNoteAction(note))
+      resetForm({})
+    },
+  });
 
   return (
     <div>
@@ -51,30 +80,39 @@ const Home: React.FC<{}> = () => {
           <DialogContentText>
             To add the note to this website, please enter your title of note and message here.
           </DialogContentText>
-          <form id="SubmitForm" onSubmit={submitHandler}>
+          <form id="SubmitForm" onSubmit={formik.handleSubmit}>
             <TextField
               autoFocus
               id="title"
               label="Title"
               type="text"
+              value={formik.values.title}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.touched.title && Boolean(formik.errors.title)}
+              helperText={formik.touched.title && formik.errors.title}
               fullWidth
               variant="standard"
             />
             <TextField
-              id="note"
-              label="Note"
+              id="message"
+              label="Message"
               multiline
               rows={4}
+              value={formik.values.message}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.touched.message && Boolean(formik.errors.message)}
+              helperText={formik.touched.message && formik.errors.message}
               fullWidth
-              defaultValue=""
               variant="standard"
             />
           </form>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClickClose}>Cancel</Button>
-          <Button form="SubmitForm" type="submit">
-            Subscribe
+          <Button disabled={!(formik.isValid && formik.dirty)} form="SubmitForm" type="submit">
+            Submit
           </Button>
         </DialogActions>
       </Dialog>
