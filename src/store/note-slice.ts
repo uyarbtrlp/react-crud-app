@@ -8,6 +8,6 @@ const noteSlice = createSlice({
   },
 });
 
-export const uiActions = noteSlice.actions;
+export const noteActions = noteSlice.actions;
 
 export default noteSlice;

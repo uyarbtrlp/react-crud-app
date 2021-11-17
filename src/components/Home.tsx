@@ -17,7 +17,8 @@ import {
   TextField,
 } from "@mui/material";
 import { useFormik } from "formik";
-import { Note, sendNoteAction } from "../store/note-actions";
+import { getNotesAction, Note, sendNoteAction } from "../store/note-actions";
+import { noteActions } from "../store/note-slice";
 
 const validationSchema = yup.object({
   title: yup
@@ -31,10 +32,15 @@ const validationSchema = yup.object({
 const Home: React.FC<{}> = () => {
   const dispatch: AppDispatch = useDispatch();
   const [open, setOpen] = React.useState(false);
+  const token = useSelector(
+    (state: RootState) => state.auth.token
+  );
   useEffect(() => {
-    checkAutoLogin(dispatch);
-    dispatch(authActions.getUserToken());
-  }, []);
+    if(token){
+      dispatch(getNotesAction(token))
+    }
+
+  }, [dispatch,token]);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -60,7 +66,7 @@ const Home: React.FC<{}> = () => {
         message:values.message,
         title:values.title
       }
-      dispatch(sendNoteAction(note))
+      dispatch(sendNoteAction(note,token))
       resetForm({})
     },
   });
