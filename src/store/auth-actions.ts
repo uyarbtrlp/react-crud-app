@@ -94,8 +94,18 @@ export function runLogoutTimer(dispatch:AppDispatch,timer:number){
     dispatch(authActions.logout())
   },timer)
 }
+export function getUserTokenAction() {
+  return async (dispatch:AppDispatch) => {
+    const userDetailString:string | null = localStorage.getItem("userDetails")
+    const userDetail = JSON.parse(userDetailString as string)
+    var token = userDetail?.idToken
+    dispatch(authActions.getUserToken({token:token}))
+  }
+}
 
-export function checkAutoLogin(dispatch:AppDispatch){
+
+export function checkAutoLogin(){
+  return async (dispatch:AppDispatch)=>{
   const tokenDetailsString = localStorage.getItem("userDetails")
   let tokenDetails:any='';
   if(!tokenDetailsString){
@@ -111,4 +121,5 @@ export function checkAutoLogin(dispatch:AppDispatch){
     }
     const timer = expireDate.getTime() - todaysDate.getTime()
     runLogoutTimer(dispatch,timer)
+}
 }

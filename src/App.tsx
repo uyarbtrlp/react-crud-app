@@ -44,10 +44,8 @@ function App() {
     (state: RootState) => state.auth.isAuthenticated
   );
   useEffect(() => {
-    if(!isAuthenticated){
       dispatch(authActions.isLogged());
-    }
-  }, [dispatch,isAuthenticated]);
+  }, [dispatch]);
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline></CssBaseline>

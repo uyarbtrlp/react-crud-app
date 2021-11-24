@@ -1,9 +1,10 @@
 import { useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../store";
-import { checkAutoLogin } from "../store/auth-actions";
+import { checkAutoLogin, getUserTokenAction } from "../store/auth-actions";
+import DataTable from './UI/Table'
 import { authActions } from "../store/auth-slice";
-import AddIcon from '@mui/icons-material/Add';
+import AddIcon from "@mui/icons-material/Add";
 import * as React from "react";
 import * as yup from "yup";
 import {
@@ -14,77 +15,79 @@ import {
   DialogContentText,
   DialogTitle,
   Icon,
+  Paper,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   TextField,
 } from "@mui/material";
 import { useFormik } from "formik";
-import { getNotesAction, Note, sendNoteAction } from "../store/note-actions";
+import { getNotesAction, SetNote, sendNoteAction } from "../store/note-actions";
 import { noteActions } from "../store/note-slice";
 
 const validationSchema = yup.object({
-  title: yup
-    .string()
-    .required("Title is required"),
-  message: yup
-    .string()
-    .required("Message of note is required"),
+  title: yup.string().required("Title is required"),
+  message: yup.string().required("Message of note is required"),
 });
 
 const Home: React.FC<{}> = () => {
   const dispatch: AppDispatch = useDispatch();
   const [open, setOpen] = React.useState(false);
-  const token = useSelector(
-    (state: RootState) => state.auth.token
-  );
-  useEffect(() => {
-    if(token){
-      dispatch(getNotesAction(token))
-    }
 
-  }, [dispatch,token]);
+  useEffect(() => {
+    dispatch(checkAutoLogin());
+    dispatch(getUserTokenAction());
+  }, [dispatch]);
+
+  useEffect(()=>{
+      dispatch(getNotesAction())
+  },[dispatch])
 
   const handleClickOpen = () => {
     setOpen(true);
   };
-  const handleClickClose = () => {
+  const handleClickClose = (resetForm:any) => {
+    resetForm({})
     setOpen(false);
   };
 
-  const submitHandler = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setOpen(false);
-  };
   const formik = useFormik({
     initialValues: {
       title: "",
       message: "",
     },
     validationSchema: validationSchema,
-    validateOnBlur:true,
-    validateOnChange:true,
-    onSubmit: (values,{resetForm}) => {
-      const note:Note = {
-        message:values.message,
-        title:values.title
-      }
-      dispatch(sendNoteAction(note,token))
-      resetForm({})
+    validateOnBlur: true,
+    validateOnChange: true,
+    onSubmit: (values, { resetForm }) => {
+      const note: SetNote = {
+        message: values.message,
+        title: values.title,
+      };
+      dispatch(sendNoteAction(note));
+      resetForm({});
+      setOpen(false)
     },
   });
 
   return (
     <div>
       <Button
-      variant="contained"
+        variant="contained"
         style={{ float: "right" }}
         onClick={handleClickOpen}
       >
-       <AddIcon style={{marginRight:"3px"}} /> Create a new note
+        <AddIcon style={{ marginRight: "3px" }} /> Create a new note
       </Button>
+      <DataTable></DataTable>
       <Dialog open={open}>
         <DialogTitle>Write a note</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            To add the note to this website, please enter your title of note and message here.
+            To add the note to this website, please enter your title of note and
+            message here.
           </DialogContentText>
           <form id="SubmitForm" onSubmit={formik.handleSubmit}>
             <TextField
@@ -116,8 +119,12 @@ const Home: React.FC<{}> = () => {
           </form>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClickClose}>Cancel</Button>
-          <Button disabled={!(formik.isValid && formik.dirty)} form="SubmitForm" type="submit">
+          <Button onClick={handleClickClose.bind(null,formik.resetForm)}>Cancel</Button>
+          <Button
+            disabled={!(formik.isValid && formik.dirty)}
+            form="SubmitForm"
+            type="submit"
+          >
             Submit
           </Button>
         </DialogActions>
