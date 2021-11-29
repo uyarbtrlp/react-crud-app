@@ -2,9 +2,11 @@ import { createSlice } from "@reduxjs/toolkit";
 import { GetNote } from "./note-actions";
 interface NotesState {
   notes: GetNote[];
+  editModalOpen:boolean;
 }
 const initialState: NotesState = {
   notes: [],
+  editModalOpen:false
 };
 
 const noteSlice = createSlice({
@@ -32,6 +34,9 @@ const noteSlice = createSlice({
       var notes = state.notes
       var deletedId = action.payload.id
       state.notes = notes.filter(item=>item.id != deletedId)
+    },
+    setModalOpen:(state,action) => {
+      state.editModalOpen = action.payload
     }
   },
 });

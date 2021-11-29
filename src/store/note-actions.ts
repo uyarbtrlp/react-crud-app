@@ -114,3 +114,39 @@ export const deleteNoteAction = (id: string | null) => {
     });
   };
 };
+export const getNoteAction = (id: string | null,formik:any) => {
+  return async (dispatch: AppDispatch, getState: any) => {
+    var token = getState().auth.token;
+    fetch(
+      `https://react-api-test-e9e82-default-rtdb.europe-west1.firebasedatabase.app/notes/${id}.json?auth=${token}`,
+    ).then((res) => {
+      if (res.ok) {
+        res.json().then((data) => {
+          var note : GetNote = {
+            id:null,
+            title:data.title,
+            message:data.message
+          }
+          dispatch(noteActions.setModalOpen(true))
+          formik.setFieldValue('message',note?.message)
+          formik.setFieldValue('title',note?.title)
+          dispatch(
+            uiActions.showNotification({
+              type: "Success",
+              message: "Item successfully removed from database.",
+            })
+          );
+        });
+      } else {
+        return res.json().then((data) => {
+          dispatch(
+            uiActions.showNotification({
+              type: "Error",
+              message: "An error occured: " + data.error.message,
+            })
+          );
+        });
+      }
+    });
+  };
+};
