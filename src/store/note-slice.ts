@@ -35,6 +35,11 @@ const noteSlice = createSlice({
       var deletedId = action.payload.id
       state.notes = notes.filter(item=>item.id != deletedId)
     },
+    editNote:(state,action)=>{
+      var notes = state.notes
+      var deletedId = action.payload.id
+      state.notes = notes.filter(item=>item.id == deletedId)
+    },
     setModalOpen:(state,action) => {
       state.editModalOpen = action.payload
     }

@@ -150,3 +150,43 @@ export const getNoteAction = (id: string | null,formik:any) => {
     });
   };
 };
+export const editNoteAction = (note: SetNote, id: string) => {
+  return async (dispatch: AppDispatch, getState: any) => {
+    var token = getState().auth.token;
+    fetch(
+      `https://react-api-test-e9e82-default-rtdb.europe-west1.firebasedatabase.app/notes/${id}.json?auth=${token}`,
+      {
+        method: "PUT",
+        body: JSON.stringify({
+          message: note.message,
+          title: note.title,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    ).then((res) => {
+      if (res.ok) {
+        res.json().then((data) => {
+          console.log(data)
+          // dispatch(noteActions.addNote({ noteItem: noteItem }));
+          dispatch(
+            uiActions.showNotification({
+              type: "Success",
+              message: "Note successfully saved to database.",
+            })
+          );
+        });
+      } else {
+        return res.json().then((data) => {
+          dispatch(
+            uiActions.showNotification({
+              type: "Error",
+              message: "An error occured: " + data.error.message,
+            })
+          );
+        });
+      }
+    });
+  };
+};

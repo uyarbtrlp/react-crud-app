@@ -21,12 +21,12 @@ import {
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import store, { AppDispatch, RootState } from "../../store";
 import { alpha, styled } from "@mui/system";
 import { noteActions } from "../../store/note-slice";
-import { deleteNoteAction, getNoteAction, SetNote } from "../../store/note-actions";
+import { deleteNoteAction, editNoteAction, getNoteAction, SetNote } from "../../store/note-actions";
 import { useFormik } from "formik";
 import * as yup from "yup"
 
@@ -37,17 +37,19 @@ const validationSchema = yup.object({
 
 const DataTable: React.FC<{}> = () => {
   const dispatch = useDispatch<AppDispatch>()
+  const [id,setId] = useState<string>("")
   const open = useSelector((state:RootState)=>state.note.editModalOpen)
   const deleteItemHandler = (id: string | null) => {
     dispatch(deleteNoteAction(id))
   };
   const editItemHandler = (id: string | null) => {
     dispatch(getNoteAction(id,formik))
+    setId(id as string)
     
   };
   const handleClickClose = (resetForm: any) => {
     resetForm({})
-    dispatch(noteActions.closeModal())
+    dispatch(noteActions.setModalOpen(false))
   };
   const formik = useFormik({
     initialValues: {
@@ -62,8 +64,7 @@ const DataTable: React.FC<{}> = () => {
         message: values.message,
         title: values.title,
       };
-      console.log(note)
-      // dispatch(sendNoteAction(note));
+      dispatch(editNoteAction(note,id));
       resetForm({});
       // setOpen(false)
     },
